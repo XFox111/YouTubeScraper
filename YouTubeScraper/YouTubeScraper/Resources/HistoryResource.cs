@@ -4,7 +4,7 @@ using System.Text;
 using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
 
-namespace YouTubeScraper.Resources
+namespace YouTube.Resources
 {
     public class HistoryResource
     {

@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<MPD minBufferTime="PT2S" profiles="urn:mpeg:dash:profile:isoff-on-demand:2011" type="static">
+  <Period>
+    <AdaptationSet>
+      <ContentComponent contentType="video" id="1">
+        
+      </ContentComponent>
+    </AdaptationSet>
+    <AdaptationSet>
+      <ContentComponent contentType="audio" id="2">
+        
+      </ContentComponent>
+    </AdaptationSet>
+  </Period>
+</MPD>
