@@ -6,6 +6,7 @@ namespace YouTube
     {
         public DashManifestsResource DashManifests => new DashManifestsResource(this);
         public VideoPlaybackResource VideoPlayback => new VideoPlaybackResource(this);
+        public new CaptionsResource Captions => new CaptionsResource(this);
         public HistoryResource History { get; }
         public WatchLaterResource WatchLater { get; }
         // TODO: Add Activities override for recomendations and subscriptions and implementation of cc retrieval
