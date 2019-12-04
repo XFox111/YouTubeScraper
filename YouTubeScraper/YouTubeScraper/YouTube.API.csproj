@@ -1,14 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFrameworks>net46;netstandard2.0</TargetFrameworks>
     <AssemblyName>YouTube.API</AssemblyName>
     <RootNamespace>YouTube</RootNamespace>
+    <Company>Michael "XFox" Gordeev</Company>
+    <Copyright>Copyright ©2019 Michael "XFox" Gordeev</Copyright>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Remove="Assets\DashManifestTemplate.xml" />
-  </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Assets\DashManifestTemplate.xml" />
@@ -16,12 +15,13 @@
 
   <ItemGroup>
     <PackageReference Include="AngleSharp" Version="0.13.0" />
-    <PackageReference Include="Google.Apis" Version="1.41.1" />
-    <PackageReference Include="Google.Apis.Auth" Version="1.41.1" />
-    <PackageReference Include="Google.Apis.Core" Version="1.41.1" />
-    <PackageReference Include="Google.Apis.Oauth2.v2" Version="1.41.1.1602" />
-    <PackageReference Include="Google.Apis.YouTube.v3" Version="1.41.1.1699" />
-    <PackageReference Include="Microsoft.CSharp" Version="4.6.0" />
+    <PackageReference Include="Google.Apis" Version="1.42.0" />
+    <PackageReference Include="Google.Apis.Auth" Version="1.42.0" />
+    <PackageReference Include="Google.Apis.Core" Version="1.42.0" />
+    <PackageReference Include="Google.Apis.Oauth2.v2" Version="1.42.0.1602" />
+    <PackageReference Include="Google.Apis.YouTube.v3" Version="1.42.0.1758" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" PrivateAssets="all" />
     <PackageReference Include="YoutubeExplode" Version="4.7.10" />
   </ItemGroup>
 

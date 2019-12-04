@@ -153,7 +153,7 @@ namespace YouTube.Generators
         public Dictionary<string, string> SplitQuery(string query)
         {
             Dictionary<string, string> dic = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            string[] paramsEncoded = query.TrimStart('?').Split("&");
+            string[] paramsEncoded = query.TrimStart('?').Split('&');
             foreach (string paramEncoded in paramsEncoded)
             {
                 string param = WebUtility.UrlDecode(paramEncoded);

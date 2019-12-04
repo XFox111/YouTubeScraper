@@ -1,14 +1,10 @@
 ﻿using Google.Apis.Auth.OAuth2;
 using Google.Apis.Auth.OAuth2.Flows;
 using Google.Apis.Auth.OAuth2.Responses;
-using Google.Apis.Oauth2.v2;
-using Google.Apis.YouTube.v3;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace YouTube.Authorization
@@ -22,7 +18,7 @@ namespace YouTube.Authorization
         public static Uri FormQueryString(ClientSecrets clientSecrets, Uri redirectUri, params string[] scopes)
         {
             string clientId = Uri.EscapeDataString(clientSecrets.ClientId);
-            string scopeStr = string.Join(' ', scopes);
+            string scopeStr = string.Join(" ", scopes);
 
             return $"https://accounts.google.com/o/oauth2/auth?client_id={clientId}&redirect_uri={redirectUri.AbsoluteUri}&response_type=code&scope={scopeStr}".ToUri();
         }
