@@ -14,7 +14,7 @@ namespace YouTube.API.Test
     public class WatchLaterTest
     {
         const string testVideoId = "NkGbcQwWxqk";
-        YouTubeService service;
+        ExtendedYouTubeService service;
 
         [SetUp]
         public void Setup()
@@ -27,7 +27,7 @@ namespace YouTube.API.Test
             task.Wait();
 
             UserCredential credential = task.Result;
-            service = new YouTubeService(new BaseClientService.Initializer
+            service = new ExtendedYouTubeService(new BaseClientService.Initializer
             {
                 HttpClientInitializer = credential,
                 ApplicationName = "FoxTube"

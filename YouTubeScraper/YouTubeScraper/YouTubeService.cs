@@ -2,7 +2,7 @@
 
 namespace YouTube
 {
-    public partial class YouTubeService : Google.Apis.YouTube.v3.YouTubeService
+    public partial class ExtendedYouTubeService : Google.Apis.YouTube.v3.YouTubeService
     {
         public DashManifestsResource DashManifests => new DashManifestsResource(this);
         public VideoPlaybackResource VideoPlayback => new VideoPlaybackResource(this);
@@ -11,8 +11,8 @@ namespace YouTube
         public WatchLaterResource WatchLater => new WatchLaterResource(this);
         // TODO: Add Activities override for recomendations and subscriptions
         
-        public YouTubeService() : base() { }
+        public ExtendedYouTubeService() : base() { }
 
-        public YouTubeService(Initializer initializer) : base(initializer) { }
+        public ExtendedYouTubeService(Initializer initializer) : base(initializer) { }
     }
 }

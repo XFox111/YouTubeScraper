@@ -11,7 +11,7 @@ namespace YouTube.API.Test
         [Test]
         public void ValidVideoPlaybackTest()
         {
-            YouTubeService service = new YouTubeService();
+            ExtendedYouTubeService service = new ExtendedYouTubeService();
             VideoPlayback info = service.VideoPlayback.List("VC5-YkjMHuw").Execute();
             Assert.NotNull(info);
         }
