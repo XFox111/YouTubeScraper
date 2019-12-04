@@ -62,7 +62,7 @@ namespace YouTube.Authorization
             AuthorizationCodeFlow authorizationCodeFlow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer()
             {
                 ClientSecrets = clientSecrets,
-                Scopes = responseData.scope.Split(' ')
+                Scopes = responseData.scope.ToString().Split(' ')
             });
 
             return new UserCredential(authorizationCodeFlow, "user", tokenResponse);

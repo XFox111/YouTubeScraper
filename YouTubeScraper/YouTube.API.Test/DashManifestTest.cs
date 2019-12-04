@@ -17,7 +17,7 @@ namespace YouTube.API.Test
         public void ValidManifestTest()
         {
             YouTubeService service = new YouTubeService();
-            IReadOnlyList<DashManifest> manifests = service.DashManifests.List("VC5-YkjMHuw").Execute();
+            IReadOnlyList<DashManifest> manifests = service.DashManifests.List("NkGbcQwWxqk").Execute();
             foreach (var i in manifests)
                 Console.WriteLine(i.Label);
             Assert.IsNotNull(manifests);
