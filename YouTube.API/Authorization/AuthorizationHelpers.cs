@@ -14,13 +14,14 @@ namespace YouTube.Authorization
         public static Uri Endpoint => "https://accounts.google.com/o/oauth2/approval".ToUri();
         const string refreshEndpoint = "https://oauth2.googleapis.com/token";
         const string tokenEndpoint = "https://www.googleapis.com/oauth2/v4/token";
+        const string redirectUrl = "urn:ietf:wg:oauth:2.0:oob";
 
-        public static Uri FormQueryString(ClientSecrets clientSecrets, Uri redirectUri, params string[] scopes)
+        public static Uri FormQueryString(ClientSecrets clientSecrets, params string[] scopes)
         {
             string clientId = Uri.EscapeDataString(clientSecrets.ClientId);
             string scopeStr = string.Join(" ", scopes);
 
-            return $"https://accounts.google.com/o/oauth2/auth?client_id={clientId}&redirect_uri={redirectUri.AbsoluteUri}&response_type=code&scope={scopeStr}".ToUri();
+            return $"https://accounts.google.com/o/oauth2/auth?client_id={clientId}&redirect_uri={redirectUrl}&response_type=code&scope={scopeStr}".ToUri();
         }
 
         public static async Task<UserCredential> ExchangeToken(ClientSecrets clientSecrets, string responseToken)
@@ -30,7 +31,7 @@ namespace YouTube.Authorization
             Dictionary<string, string> requestBody = new Dictionary<string, string>
             {
                 { "code", responseToken },
-                //{ "redirect_uri", redirectUrl },
+                { "redirect_uri", redirectUrl },
                 { "grant_type", "authorization_code" },
                 { "client_id", clientSecrets.ClientId },
                 { "client_secret", clientSecrets.ClientSecret }
@@ -39,7 +40,7 @@ namespace YouTube.Authorization
             HttpResponseMessage response = await client.PostAsync(tokenEndpoint, new FormUrlEncodedContent(requestBody));
 
             if (!response.IsSuccessStatusCode)
-                return null;
+                throw new Exception(await response.Content.ReadAsStringAsync());
 
             string responseString = await response.Content.ReadAsStringAsync();
             dynamic responseData = JsonConvert.DeserializeObject(responseString);
@@ -79,7 +80,7 @@ namespace YouTube.Authorization
             HttpResponseMessage response = await client.PostAsync(refreshEndpoint, new FormUrlEncodedContent(requestBody));
 
             if (!response.IsSuccessStatusCode)
-                return null;
+                throw new Exception(await response.Content.ReadAsStringAsync());
 
             string responseString = await response.Content.ReadAsStringAsync();
             dynamic responseData = JsonConvert.DeserializeObject(responseString);

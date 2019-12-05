@@ -21,9 +21,9 @@ namespace YouTube.API.Test
         {
             var task = AuthorizationHelpers.ExchangeToken(new ClientSecrets
             {
-                ClientId = "1096685398208-u95rcpkqb4e1ijfmb8jdq3jsg37l8igv.apps.googleusercontent.com",
-                ClientSecret = "IU5bbdjwvmx8ttJoXQ7e6JWd"
-            }, "4/twFMhT4xSaAxls-rEayp8MxFI2Oy0knUdDbAXKnfyMkbDHaNyqhV6uM");
+                ClientId = "CLIENT_ID",
+                ClientSecret = "CLIENT_SECRET"
+            }, "SUCCESS_CODE");
             task.Wait();
 
             UserCredential credential = task.Result;
