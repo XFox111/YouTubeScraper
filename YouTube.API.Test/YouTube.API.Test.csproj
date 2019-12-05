@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\YouTubeScraper\YouTube.API.csproj" />
+    <ProjectReference Include="..\YouTube.API\YouTube.API.csproj" />
   </ItemGroup>
 
 </Project>
