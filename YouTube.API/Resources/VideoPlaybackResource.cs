@@ -10,102 +10,102 @@ using YoutubeExplode.Models.MediaStreams;
 
 namespace YouTube.Resources
 {
-    public class VideoPlaybackResource
-    {
-        IClientService ClientService { get; }
-        public VideoPlaybackResource(IClientService clientService) =>
-            ClientService = clientService;
+	public class VideoPlaybackResource
+	{
+		IClientService ClientService { get; }
+		public VideoPlaybackResource(IClientService clientService) =>
+			ClientService = clientService;
 
-        public ListRequest List(string videoId) =>
-            new ListRequest(ClientService, videoId);
+		public ListRequest List(string videoId) =>
+			new ListRequest(ClientService, videoId);
 
-        public class ListRequest
-        {
-            IClientService Service { get; }
+		public class ListRequest
+		{
+			IClientService Service { get; }
 
-            public string Id { get; set; }
+			public string Id { get; set; }
 
-            public async Task<VideoPlayback> ExecuteAsync()
-            {
-                VideoPlayback item = new VideoPlayback();
-                YoutubeClient client = new YoutubeClient(Service.HttpClient);
-                MediaStreamInfoSet streamSet = await client.GetVideoMediaStreamInfosAsync(Id);
-                item.Id = Id;
-                item.PlaybackUrls.ValidUntil = streamSet.ValidUntil.DateTime;
+			public async Task<VideoPlayback> ExecuteAsync()
+			{
+				VideoPlayback item = new VideoPlayback();
+				YoutubeClient client = new YoutubeClient(Service.HttpClient);
+				MediaStreamInfoSet streamSet = await client.GetVideoMediaStreamInfosAsync(Id);
+				item.Id = Id;
+				item.PlaybackUrls.ValidUntil = streamSet.ValidUntil.DateTime;
 
-                if(!string.IsNullOrWhiteSpace(streamSet.HlsLiveStreamUrl))
-                {
-                    item.PlaybackUrls.LiveStreamUrl = streamSet.HlsLiveStreamUrl;
-                    return item;
-                }
+				if (!string.IsNullOrWhiteSpace(streamSet.HlsLiveStreamUrl))
+				{
+					item.PlaybackUrls.LiveStreamUrl = streamSet.HlsLiveStreamUrl;
+					return item;
+				}
 
-                List<AudioPlaybackUrl> audio = new List<AudioPlaybackUrl>();
-                foreach (AudioStreamInfo i in streamSet.Audio)
-                    audio.Add(new AudioPlaybackUrl
-                    {
-                        Url = i.Url,
-                        Bitrate = (int)i.Bitrate,
-                        Format = (AudioFormat)i.AudioEncoding,
-                        Quality = Extensions.RangeOffset((int)i.Bitrate / 1024, 128, 255) switch
-                        {
-                            -1 => AudioQuality.Low,
-                            1 => AudioQuality.High,
-                            _ => AudioQuality.Medium
-                        }
-                    });
-                item.PlaybackUrls.Audio = audio.AsReadOnly();
+				List<AudioPlaybackUrl> audio = new List<AudioPlaybackUrl>();
+				foreach (AudioStreamInfo i in streamSet.Audio)
+					audio.Add(new AudioPlaybackUrl
+					{
+						Url = i.Url,
+						Bitrate = (int)i.Bitrate,
+						Format = (AudioFormat)i.AudioEncoding,
+						Quality = Extensions.RangeOffset((int)i.Bitrate / 1024, 128, 255) switch
+						{
+							-1 => AudioQuality.Low,
+							1 => AudioQuality.High,
+							_ => AudioQuality.Medium
+						}
+					});
+				item.PlaybackUrls.Audio = audio.AsReadOnly();
 
-                List<VideoPlaybackUrl> video = new List<VideoPlaybackUrl>();
-                foreach (VideoStreamInfo i in streamSet.Video)
-                    video.Add(new VideoPlaybackUrl
-                    {
-                        Format = (VideoFormat)i.VideoEncoding,
-                        HasAudio = false,
-                        Quality = i.VideoQualityLabel,
-                        Url = i.Url,
-                        Resolution = new Size(i.Resolution.Width, i.Resolution.Height),
-                        Bitrate = (int)i.Bitrate
-                    });
+				List<VideoPlaybackUrl> video = new List<VideoPlaybackUrl>();
+				foreach (VideoStreamInfo i in streamSet.Video)
+					video.Add(new VideoPlaybackUrl
+					{
+						Format = (VideoFormat)i.VideoEncoding,
+						HasAudio = false,
+						Quality = i.VideoQualityLabel,
+						Url = i.Url,
+						Resolution = new Size(i.Resolution.Width, i.Resolution.Height),
+						Bitrate = (int)i.Bitrate
+					});
 
-                foreach (MuxedStreamInfo i in streamSet.Muxed)
-                    video.Add(new VideoPlaybackUrl
-                    {
-                        Format = (VideoFormat)i.VideoEncoding,
-                        HasAudio = true,
-                        Quality = i.VideoQualityLabel,
-                        Url = i.Url,
-                        Resolution = new Size(i.Resolution.Width, i.Resolution.Height),
-                        Bitrate = 0
-                    });
-                item.PlaybackUrls.Video = video.AsReadOnly();
+				foreach (MuxedStreamInfo i in streamSet.Muxed)
+					video.Add(new VideoPlaybackUrl
+					{
+						Format = (VideoFormat)i.VideoEncoding,
+						HasAudio = true,
+						Quality = i.VideoQualityLabel,
+						Url = i.Url,
+						Resolution = new Size(i.Resolution.Width, i.Resolution.Height),
+						Bitrate = 0
+					});
+				item.PlaybackUrls.Video = video.AsReadOnly();
 
-                var ccSet = await client.GetVideoClosedCaptionTrackInfosAsync(Id);
+				var ccSet = await client.GetVideoClosedCaptionTrackInfosAsync(Id);
 
-                List<ClosedCaptionInfo> captions = new List<ClosedCaptionInfo>();
-                foreach (ClosedCaptionTrackInfo i in ccSet)
-                    captions.Add(new ClosedCaptionInfo
-                    {
-                        AutoGenerated = i.IsAutoGenerated,
-                        Url = i.Url,
-                        Language = new CultureInfo(i.Language.Code),
-                        TrackInfo = i
-                    });
-                item.ClosedCaptions = captions.AsReadOnly();
+				List<ClosedCaptionInfo> captions = new List<ClosedCaptionInfo>();
+				foreach (ClosedCaptionTrackInfo i in ccSet)
+					captions.Add(new ClosedCaptionInfo
+					{
+						AutoGenerated = i.IsAutoGenerated,
+						Url = i.Url,
+						Language = new CultureInfo(i.Language.Code),
+						TrackInfo = i
+					});
+				item.ClosedCaptions = captions.AsReadOnly();
 
-                return item;
-            }
+				return item;
+			}
 
-            public VideoPlayback Execute()
-            {
-                Task<VideoPlayback> task = ExecuteAsync();
-                task.Wait();
-                return task.Result;
-            }
-            public ListRequest(IClientService service, string id)
-            {
-                Id = id;
-                Service = service;
-            }
-        }
-    }
+			public VideoPlayback Execute()
+			{
+				Task<VideoPlayback> task = ExecuteAsync();
+				task.Wait();
+				return task.Result;
+			}
+			public ListRequest(IClientService service, string id)
+			{
+				Id = id;
+				Service = service;
+			}
+		}
+	}
 }

@@ -5,23 +5,17 @@ using YouTube.Models;
 
 namespace YouTube.API.Test
 {
-    public class DashManifestTest
-    {
-        [SetUp]
-        public void Setup()
-        {
-
-        }
-
-        [Test]
-        public void ValidManifestTest()
-        {
-            ExtendedYouTubeService service = new ExtendedYouTubeService();
-            IReadOnlyList<DashManifest> manifests = service.DashManifests.List("NkGbcQwWxqk").Execute();
-            foreach (var i in manifests)
-                Console.WriteLine(i.Label);
-            Assert.IsNotNull(manifests);
-            Assert.IsNotEmpty(manifests);
-        }
-    }
+	public class DashManifestTest
+	{
+		[Test]
+		public void ValidManifestTest()
+		{
+			ExtendedYouTubeService service = new ExtendedYouTubeService();
+			IReadOnlyList<DashManifest> manifests = service.DashManifests.List("NkGbcQwWxqk").Execute();
+			foreach (var i in manifests)
+				Console.WriteLine(i.Label);
+			Assert.IsNotNull(manifests);
+			Assert.IsNotEmpty(manifests);
+		}
+	}
 }

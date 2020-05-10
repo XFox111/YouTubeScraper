@@ -17,210 +17,210 @@ using YoutubeExplode.Models.MediaStreams;
 
 namespace YouTube.Generators
 {
-    internal class ManifestGenerator
-    {
-        IClientService ClientService { get; }
-        YoutubeClient Client { get; }
-        string Id { get; }
-        Video Meta { get; set; }
-        MediaStreamInfoSet UrlsSet { get; set; }
+	internal class ManifestGenerator
+	{
+		IClientService ClientService { get; }
+		YoutubeClient Client { get; }
+		string Id { get; }
+		Video Meta { get; set; }
+		MediaStreamInfoSet UrlsSet { get; set; }
 
-        public ManifestGenerator(IClientService service, string id)
-        {
-            ClientService = service;
-            Id = id;
-            Client = new YoutubeClient(service.HttpClient);
-        }
+		public ManifestGenerator(IClientService service, string id)
+		{
+			ClientService = service;
+			Id = id;
+			Client = new YoutubeClient(service.HttpClient);
+		}
 
-        public async Task<IReadOnlyList<DashManifest>> GenerateManifestsAsync()
-        {
-            Meta = await Client.GetVideoAsync(Id);
+		public async Task<IReadOnlyList<DashManifest>> GenerateManifestsAsync()
+		{
+			Meta = await Client.GetVideoAsync(Id);
 
-            if (Meta == null)
-                throw new FileNotFoundException("Video not found. Check video ID and visibility preferences");
+			if (Meta == null)
+				throw new FileNotFoundException("Video not found. Check video ID and visibility preferences");
 
-            UrlsSet = await Client.GetVideoMediaStreamInfosAsync(Id);
+			UrlsSet = await Client.GetVideoMediaStreamInfosAsync(Id);
 
-            if (!string.IsNullOrWhiteSpace(UrlsSet.HlsLiveStreamUrl))
-                throw new NotSupportedException("This is livestream. Use 'YouTubeClient.VideoPlayback.List()' to get playback URLs");
+			if (!string.IsNullOrWhiteSpace(UrlsSet.HlsLiveStreamUrl))
+				throw new NotSupportedException("This is livestream. Use 'YouTubeClient.VideoPlayback.List()' to get playback URLs");
 
-            List<DashManifest> list = new List<DashManifest>
-            {
-                await GenerateManifest("Auto")
-            };
-            foreach (string i in UrlsSet.GetAllVideoQualityLabels())
-                list.Add(await GenerateManifest(i));
-            
-            return list.AsReadOnly();
-        }
+			List<DashManifest> list = new List<DashManifest>
+			{
+				await GenerateManifest("Auto")
+			};
+			foreach (string i in UrlsSet.GetAllVideoQualityLabels())
+				list.Add(await GenerateManifest(i));
 
-        async Task<DashManifest> GenerateManifest(string quality)
-        {
-            XmlDocument manifest = new XmlDocument();
-            manifest.LoadXml(Properties.Resources.DashManifestTemplate);
+			return list.AsReadOnly();
+		}
 
-            manifest["MPD"].SetAttribute("mediaPresentationDuration", XmlConvert.ToString(Meta.Duration));
+		async Task<DashManifest> GenerateManifest(string quality)
+		{
+			XmlDocument manifest = new XmlDocument();
+			manifest.LoadXml(Properties.Resources.DashManifestTemplate);
 
-            StreamInfo streamInfo = await GetInfoAsync(quality);
+			manifest["MPD"].SetAttribute("mediaPresentationDuration", XmlConvert.ToString(Meta.Duration));
 
-            foreach (var i in streamInfo.Video)
-            {
-                string rep = GetVideoRepresentation(i);
-                manifest.GetElementsByTagName("ContentComponent")[0].InnerXml += rep;
-            }
+			StreamInfo streamInfo = await GetInfoAsync(quality);
 
-            foreach (var i in streamInfo.Audio)
-                manifest.GetElementsByTagName("ContentComponent")[1].InnerXml += GetAudioRepresentation(i);
+			foreach (var i in streamInfo.Video)
+			{
+				string rep = GetVideoRepresentation(i);
+				manifest.GetElementsByTagName("ContentComponent")[0].InnerXml += rep;
+			}
 
-            return new DashManifest(quality, manifest);
-        }
+			foreach (var i in streamInfo.Audio)
+				manifest.GetElementsByTagName("ContentComponent")[1].InnerXml += GetAudioRepresentation(i);
 
-        string GetVideoRepresentation(StreamInfo.VideoInfo info) =>
-            $@"<Representation bandwidth=""{GetBandwidth(info.Label)}"" id=""{info.Itag}"" mimeType=""{info.MimeType}"" codecs=""{info.Codecs}"" fps=""{info.Fps}"" height=""{info.Height}"" width=""{info.Width}"">
+			return new DashManifest(quality, manifest);
+		}
+
+		string GetVideoRepresentation(StreamInfo.VideoInfo info) =>
+			$@"<Representation bandwidth=""{GetBandwidth(info.Label)}"" id=""{info.Itag}"" mimeType=""{info.MimeType}"" codecs=""{info.Codecs}"" fps=""{info.Fps}"" height=""{info.Height}"" width=""{info.Width}"">
                 <BaseURL>{WebUtility.UrlEncode(info.Url)}</BaseURL>
                 <SegmentBase indexRange=""{info.IndexRange}"">
                     <Initialization range=""{info.InitRange}""/>
                 </SegmentBase>
             </Representation>";
 
-        string GetAudioRepresentation(StreamInfo.AudioInfo info) =>
-            $@"<Representation bandwidth=""200000"" id=""{info.Itag}"" sampleRate=""{info.SampleRate}"" numChannels=""{info.ChannelsCount}"" mimeType=""{info.MimeType}"" codecs=""{info.Codecs}"">
+		string GetAudioRepresentation(StreamInfo.AudioInfo info) =>
+			$@"<Representation bandwidth=""200000"" id=""{info.Itag}"" sampleRate=""{info.SampleRate}"" numChannels=""{info.ChannelsCount}"" mimeType=""{info.MimeType}"" codecs=""{info.Codecs}"">
                 <BaseURL>{WebUtility.UrlEncode(info.Url)}</BaseURL>
                 <SegmentBase indexRange=""{info.IndexRange}"">
                     <Initialization range=""{info.InitRange}""/>
                 </SegmentBase>
             </Representation>";
 
-        async Task<StreamInfo> GetInfoAsync(string quality)
-        {
-            StreamInfo info = new StreamInfo();
+		async Task<StreamInfo> GetInfoAsync(string quality)
+		{
+			StreamInfo info = new StreamInfo();
 
-            string response = await ClientService.HttpClient.GetStringAsync($"https://youtube.com/watch?v={Id}&disable_polymer=true&bpctr=9999999999&hl=en");
-            IHtmlDocument videoEmbedPageHtml = new HtmlParser().ParseDocument(response);
+			string response = await ClientService.HttpClient.GetStringAsync($"https://youtube.com/watch?v={Id}&disable_polymer=true&bpctr=9999999999&hl=en");
+			IHtmlDocument videoEmbedPageHtml = new HtmlParser().ParseDocument(response);
 
-            #region I don't know what the fuck is this
-            string playerConfigRaw = Regex.Match(videoEmbedPageHtml.Source.Text,
-                @"ytplayer\.config = (?<Json>\{[^\{\}]*(((?<Open>\{)[^\{\}]*)+((?<Close-Open>\})[^\{\}]*)+)*(?(Open)(?!))\})")
-                .Groups["Json"].Value;
-            JToken playerConfigJson = JToken.Parse(playerConfigRaw);
+			#region I don't know what the fuck is this
+			string playerConfigRaw = Regex.Match(videoEmbedPageHtml.Source.Text,
+				@"ytplayer\.config = (?<Json>\{[^\{\}]*(((?<Open>\{)[^\{\}]*)+((?<Close-Open>\})[^\{\}]*)+)*(?(Open)(?!))\})")
+				.Groups["Json"].Value;
+			JToken playerConfigJson = JToken.Parse(playerConfigRaw);
 
-            var playerResponseRaw = playerConfigJson.SelectToken("args.player_response").Value<string>();
-            JToken playerResponseJson = JToken.Parse(playerResponseRaw);
-            string errorReason = playerResponseJson.SelectToken("playabilityStatus.reason")?.Value<string>();
-            if (!string.IsNullOrWhiteSpace(errorReason))
-                throw new InvalidDataException($"Video [{Id}] is unplayable. Reason: {errorReason}");
+			var playerResponseRaw = playerConfigJson.SelectToken("args.player_response").Value<string>();
+			JToken playerResponseJson = JToken.Parse(playerResponseRaw);
+			string errorReason = playerResponseJson.SelectToken("playabilityStatus.reason")?.Value<string>();
+			if (!string.IsNullOrWhiteSpace(errorReason))
+				throw new InvalidDataException($"Video [{Id}] is unplayable. Reason: {errorReason}");
 
-            List<Dictionary<string, string>> adaptiveStreamInfosUrl = playerConfigJson.SelectToken("args.adaptive_fmts")?.Value<string>().Split(',').Select(SplitQuery).ToList();
-            List<Dictionary<string, string>> video =
-                quality == "Auto" ?
-                    adaptiveStreamInfosUrl.FindAll(i => i.ContainsKey("quality_label")) :
-                    adaptiveStreamInfosUrl.FindAll(i => i.ContainsValue(quality.Substring(0, quality.IndexOf('p'))));
-            List<Dictionary<string, string>> audio = adaptiveStreamInfosUrl.FindAll(i => i.ContainsKey("audio_sample_rate"));
-            #endregion
+			List<Dictionary<string, string>> adaptiveStreamInfosUrl = playerConfigJson.SelectToken("args.adaptive_fmts")?.Value<string>().Split(',').Select(SplitQuery).ToList();
+			List<Dictionary<string, string>> video =
+				quality == "Auto" ?
+					adaptiveStreamInfosUrl.FindAll(i => i.ContainsKey("quality_label")) :
+					adaptiveStreamInfosUrl.FindAll(i => i.ContainsValue(quality.Substring(0, quality.IndexOf('p'))));
+			List<Dictionary<string, string>> audio = adaptiveStreamInfosUrl.FindAll(i => i.ContainsKey("audio_sample_rate"));
+			#endregion
 
-            foreach (var i in video)
-                info.Video.Add(new StreamInfo.VideoInfo
-                {
-                    IndexRange = i["index"],
-                    Url = i["url"],
-                    Itag = i["itag"],
-                    Fps = i["fps"],
-                    Height = i["size"].Split('x')[1],
-                    Width = i["size"].Split('x')[0],
-                    Codecs = i["type"].Split('"')[1],
-                    MimeType = i["type"].Split(';')[0],
-                    Label = i["quality_label"]
-                });
+			foreach (var i in video)
+				info.Video.Add(new StreamInfo.VideoInfo
+				{
+					IndexRange = i["index"],
+					Url = i["url"],
+					Itag = i["itag"],
+					Fps = i["fps"],
+					Height = i["size"].Split('x')[1],
+					Width = i["size"].Split('x')[0],
+					Codecs = i["type"].Split('"')[1],
+					MimeType = i["type"].Split(';')[0],
+					Label = i["quality_label"]
+				});
 
-            foreach (var i in audio)
-                info.Audio.Add(new StreamInfo.AudioInfo
-                {
-                    ChannelsCount = i["audio_channels"],
-                    IndexRange = i["index"],
-                    SampleRate = i["audio_sample_rate"],
-                    Codecs = i["type"].Split('"')[1],
-                    MimeType = i["type"].Split(';')[0],
-                    Url = i["url"],
-                    Itag = i["itag"]
-                });
+			foreach (var i in audio)
+				info.Audio.Add(new StreamInfo.AudioInfo
+				{
+					ChannelsCount = i["audio_channels"],
+					IndexRange = i["index"],
+					SampleRate = i["audio_sample_rate"],
+					Codecs = i["type"].Split('"')[1],
+					MimeType = i["type"].Split(';')[0],
+					Url = i["url"],
+					Itag = i["itag"]
+				});
 
-            return info;
-        }
+			return info;
+		}
 
-        /// <summary>
-        /// I don't know what the fuck is this either
-        /// </summary>
-        public Dictionary<string, string> SplitQuery(string query)
-        {
-            Dictionary<string, string> dic = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            string[] paramsEncoded = query.TrimStart('?').Split('&');
-            foreach (string paramEncoded in paramsEncoded)
-            {
-                string param = WebUtility.UrlDecode(paramEncoded);
+		/// <summary>
+		/// I don't know what the fuck is this either
+		/// </summary>
+		public Dictionary<string, string> SplitQuery(string query)
+		{
+			Dictionary<string, string> dic = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+			string[] paramsEncoded = query.TrimStart('?').Split('&');
+			foreach (string paramEncoded in paramsEncoded)
+			{
+				string param = WebUtility.UrlDecode(paramEncoded);
 
-                // Look for the equals sign
-                int equalsPos = param.IndexOf('=');
-                if (equalsPos <= 0)
-                    continue;
+				// Look for the equals sign
+				int equalsPos = param.IndexOf('=');
+				if (equalsPos <= 0)
+					continue;
 
-                // Get the key and value
-                string key = param.Substring(0, equalsPos);
-                string value = equalsPos < param.Length
-                    ? param.Substring(equalsPos + 1)
-                    : string.Empty;
+				// Get the key and value
+				string key = param.Substring(0, equalsPos);
+				string value = equalsPos < param.Length
+					? param.Substring(equalsPos + 1)
+					: string.Empty;
 
-                // Add to dictionary
-                dic[key] = value;
-            }
+				// Add to dictionary
+				dic[key] = value;
+			}
 
-            return dic;
-        }
+			return dic;
+		}
 
-        string GetBandwidth(string quality) =>
-            quality.Split('p')[0] switch
-            {
-                "4320" => "16763040‬",
-                "3072" => "11920384",
-                "2880" => "11175360",
-                "2160" => "8381520",
-                "1440" => "5587680‬",
-                "1080" => "4190760",
-                "720" => "2073921",
-                "480" => "869460",
-                "360" => "686521",
-                "240" => "264835",
-                _ => "100000",
-            };
+		string GetBandwidth(string quality) =>
+			quality.Split('p')[0] switch
+			{
+				"4320" => "16763040‬",
+				"3072" => "11920384",
+				"2880" => "11175360",
+				"2160" => "8381520",
+				"1440" => "5587680‬",
+				"1080" => "4190760",
+				"720" => "2073921",
+				"480" => "869460",
+				"360" => "686521",
+				"240" => "264835",
+				_ => "100000",
+			};
 
-        class StreamInfo
-        {
-            public class VideoInfo
-            {
-                public string IndexRange { get; set; }
-                public string InitRange => $"0-{int.Parse(IndexRange.Split('-')[0]) - 1}";
-                public string Itag { get; set; }
-                public string Fps { get; set; }
-                public string Url { get; set; }
-                public string Codecs { get; set; }
-                public string MimeType { get; set; }
-                public string Height { get; set; }
-                public string Width { get; set; }
-                public string Label { get; set; }
-            }
-            public class AudioInfo
-            {
-                public string IndexRange { get; set; }
-                public string InitRange => $"0-{int.Parse(IndexRange.Split('-')[0]) - 1}";
-                public string SampleRate { get; set; }
-                public string ChannelsCount { get; set; }
-                public string Codecs { get; set; }
-                public string MimeType { get; set; }
-                public string Url { get; set; }
-                public string Itag { get; set; }
-            }
+		class StreamInfo
+		{
+			public class VideoInfo
+			{
+				public string IndexRange { get; set; }
+				public string InitRange => $"0-{int.Parse(IndexRange.Split('-')[0]) - 1}";
+				public string Itag { get; set; }
+				public string Fps { get; set; }
+				public string Url { get; set; }
+				public string Codecs { get; set; }
+				public string MimeType { get; set; }
+				public string Height { get; set; }
+				public string Width { get; set; }
+				public string Label { get; set; }
+			}
+			public class AudioInfo
+			{
+				public string IndexRange { get; set; }
+				public string InitRange => $"0-{int.Parse(IndexRange.Split('-')[0]) - 1}";
+				public string SampleRate { get; set; }
+				public string ChannelsCount { get; set; }
+				public string Codecs { get; set; }
+				public string MimeType { get; set; }
+				public string Url { get; set; }
+				public string Itag { get; set; }
+			}
 
-            public List<VideoInfo> Video { get; } = new List<VideoInfo>();
-            public List<AudioInfo> Audio { get; } = new List<AudioInfo>();
-        }
-    }
+			public List<VideoInfo> Video { get; } = new List<VideoInfo>();
+			public List<AudioInfo> Audio { get; } = new List<AudioInfo>();
+		}
+	}
 }
