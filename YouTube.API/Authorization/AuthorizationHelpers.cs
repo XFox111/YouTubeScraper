@@ -5,102 +5,106 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace YouTube.Authorization
 {
-    public static class AuthorizationHelpers
-    {
-        public static Uri Endpoint => "https://accounts.google.com/o/oauth2/approval".ToUri();
-        const string refreshEndpoint = "https://oauth2.googleapis.com/token";
-        const string tokenEndpoint = "https://www.googleapis.com/oauth2/v4/token";
-        const string redirectUrl = "urn:ietf:wg:oauth:2.0:oob";
+	public static class AuthorizationHelpers
+	{
+		public static Uri Endpoint => "https://accounts.google.com/o/oauth2/approval".ToUri();
+		private const string refreshEndpoint = "https://oauth2.googleapis.com/token";
+		private const string tokenEndpoint = "https://www.googleapis.com/oauth2/v4/token";
+		private const string redirectUrl = "urn:ietf:wg:oauth:2.0:oob";
 
-        public static Uri FormQueryString(ClientSecrets clientSecrets, params string[] scopes)
-        {
-            string clientId = Uri.EscapeDataString(clientSecrets.ClientId);
-            string scopeStr = string.Join(" ", scopes);
+		public static Uri FormQueryString(ClientSecrets clientSecrets, params string[] scopes)
+		{
+			string clientId = Uri.EscapeDataString(clientSecrets.ClientId);
+			string scopeStr = string.Join(" ", scopes);
 
-            return $"https://accounts.google.com/o/oauth2/auth?client_id={clientId}&redirect_uri={redirectUrl}&response_type=code&scope={scopeStr}".ToUri();
-        }
+			return $"https://accounts.google.com/o/oauth2/auth?client_id={clientId}&redirect_uri={redirectUrl}&response_type=code&scope={scopeStr}".ToUri();
+		}
 
-        public static async Task<UserCredential> ExchangeToken(ClientSecrets clientSecrets, string responseToken)
-        {
-            using HttpClient client = new HttpClient();
+		public static string ParseSuccessCode(string responseData) =>
+			new Regex(@"(?<=code=)(.*?)(?=&)").Match(responseData).Value;
 
-            Dictionary<string, string> requestBody = new Dictionary<string, string>
-            {
-                { "code", responseToken },
-                { "redirect_uri", redirectUrl },
-                { "grant_type", "authorization_code" },
-                { "client_id", clientSecrets.ClientId },
-                { "client_secret", clientSecrets.ClientSecret }
-            };
+		public static async Task<UserCredential> ExchangeToken(ClientSecrets clientSecrets, string responseToken)
+		{
+			using HttpClient client = new HttpClient();
 
-            HttpResponseMessage response = await client.PostAsync(tokenEndpoint, new FormUrlEncodedContent(requestBody));
+			Dictionary<string, string> requestBody = new Dictionary<string, string>
+			{
+				{ "code", responseToken },
+				{ "redirect_uri", redirectUrl },
+				{ "grant_type", "authorization_code" },
+				{ "client_id", clientSecrets.ClientId },
+				{ "client_secret", clientSecrets.ClientSecret }
+			};
 
-            if (!response.IsSuccessStatusCode)
-                throw new Exception(await response.Content.ReadAsStringAsync());
+			HttpResponseMessage response = await client.PostAsync(tokenEndpoint, new FormUrlEncodedContent(requestBody));
 
-            string responseString = await response.Content.ReadAsStringAsync();
-            dynamic responseData = JsonConvert.DeserializeObject(responseString);
+			if (!response.IsSuccessStatusCode)
+				throw new Exception(await response.Content.ReadAsStringAsync());
 
-            TokenResponse tokenResponse = new TokenResponse
-            {
-                AccessToken = responseData.access_token,
-                ExpiresInSeconds = responseData.expires_in,
-                RefreshToken = responseData.refresh_token,
-                Scope = responseData.scope,
-                TokenType = responseData.token_type
-            };
+			string responseString = await response.Content.ReadAsStringAsync();
+			dynamic responseData = JsonConvert.DeserializeObject(responseString);
 
-            AuthorizationCodeFlow authorizationCodeFlow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
-            {
-                ClientSecrets = clientSecrets,
-                Scopes = responseData.scope.ToString().Split(' ')
-            });
+			TokenResponse tokenResponse = new TokenResponse
+			{
+				AccessToken = responseData.access_token,
+				ExpiresInSeconds = responseData.expires_in,
+				RefreshToken = responseData.refresh_token,
+				Scope = responseData.scope,
+				TokenType = responseData.token_type
+			};
 
-            UserCredential credential = new UserCredential(authorizationCodeFlow, "user", tokenResponse);
+			AuthorizationCodeFlow authorizationCodeFlow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
+			{
+				ClientSecrets = clientSecrets,
+				Scopes = responseData.scope.ToString().Split(' ')
+			});
 
-            return credential;
-        }
+			UserCredential credential = new UserCredential(authorizationCodeFlow, "user", tokenResponse);
 
-        public static async Task<UserCredential> RestoreUser(ClientSecrets clientSecrets, string refreshToken)
-        {
-            using HttpClient client = new HttpClient();
+			return credential;
+		}
 
-            Dictionary<string, string> requestBody = new Dictionary<string, string>
-            {
-                { "client_id", clientSecrets.ClientId },
-                { "client_secret", clientSecrets.ClientSecret },
-                { "refresh_token", refreshToken },
-                { "grant_type", "refresh_token" }
-            };
+		public static async Task<UserCredential> RestoreUser(ClientSecrets clientSecrets, string refreshToken)
+		{
+			using HttpClient client = new HttpClient();
 
-            HttpResponseMessage response = await client.PostAsync(refreshEndpoint, new FormUrlEncodedContent(requestBody));
+			Dictionary<string, string> requestBody = new Dictionary<string, string>
+			{
+				{ "client_id", clientSecrets.ClientId },
+				{ "client_secret", clientSecrets.ClientSecret },
+				{ "refresh_token", refreshToken },
+				{ "grant_type", "refresh_token" }
+			};
 
-            if (!response.IsSuccessStatusCode)
-                throw new Exception(await response.Content.ReadAsStringAsync());
+			HttpResponseMessage response = await client.PostAsync(refreshEndpoint, new FormUrlEncodedContent(requestBody));
 
-            string responseString = await response.Content.ReadAsStringAsync();
-            dynamic responseData = JsonConvert.DeserializeObject(responseString);
+			if (!response.IsSuccessStatusCode)
+				throw new Exception(await response.Content.ReadAsStringAsync());
 
-            TokenResponse tokenResponse = new TokenResponse
-            {
-                AccessToken = responseData.access_token,
-                ExpiresInSeconds = responseData.expires_in,
-                RefreshToken = refreshToken,
-                TokenType = responseData.token_type
-            };
+			string responseString = await response.Content.ReadAsStringAsync();
+			dynamic responseData = JsonConvert.DeserializeObject(responseString);
 
-            AuthorizationCodeFlow authorizationCodeFlow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
-            {
-                ClientSecrets = clientSecrets
-            });
+			TokenResponse tokenResponse = new TokenResponse
+			{
+				AccessToken = responseData.access_token,
+				ExpiresInSeconds = responseData.expires_in,
+				RefreshToken = refreshToken,
+				TokenType = responseData.token_type
+			};
 
-            UserCredential credential = new UserCredential(authorizationCodeFlow, "user", tokenResponse);
+			AuthorizationCodeFlow authorizationCodeFlow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
+			{
+				ClientSecrets = clientSecrets
+			});
 
-            return credential;
-        }
-    }
+			UserCredential credential = new UserCredential(authorizationCodeFlow, "user", tokenResponse);
+
+			return credential;
+		}
+	}
 }

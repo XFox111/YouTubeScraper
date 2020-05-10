@@ -21,15 +21,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AngleSharp" Version="0.13.0" />
-    <PackageReference Include="Google.Apis" Version="1.42.0" />
-    <PackageReference Include="Google.Apis.Auth" Version="1.42.0" />
-    <PackageReference Include="Google.Apis.Core" Version="1.42.0" />
-    <PackageReference Include="Google.Apis.Oauth2.v2" Version="1.42.0.1602" />
-    <PackageReference Include="Google.Apis.YouTube.v3" Version="1.42.0.1758" />
+    <PackageReference Include="AngleSharp" Version="0.14.0" />
+    <PackageReference Include="Google.Apis" Version="1.45.0" />
+    <PackageReference Include="Google.Apis.Auth" Version="1.45.0" />
+    <PackageReference Include="Google.Apis.Core" Version="1.45.0" />
+    <PackageReference Include="Google.Apis.Oauth2.v2" Version="1.45.0.1869" />
+    <PackageReference Include="Google.Apis.YouTube.v3" Version="1.45.0.1918" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" PrivateAssets="all" />
-    <PackageReference Include="YoutubeExplode" Version="4.7.10" />
+    <PackageReference Include="YoutubeExplode" Version="4.7.16" />
   </ItemGroup>
 
   <ItemGroup>
