@@ -1,5 +1,5 @@
 ﻿using System.Globalization;
-using YoutubeExplode.Models.ClosedCaptions;
+using YoutubeExplode.Videos.ClosedCaptions;
 
 namespace YouTube.Models
 {

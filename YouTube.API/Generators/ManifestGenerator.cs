@@ -12,8 +12,8 @@ using System.Threading.Tasks;
 using System.Xml;
 using YouTube.Models;
 using YoutubeExplode;
-using YoutubeExplode.Models;
-using YoutubeExplode.Models.MediaStreams;
+using YoutubeExplode.Videos;
+using YoutubeExplode.Videos.Streams;
 
 namespace YouTube.Generators
 {
@@ -23,7 +23,7 @@ namespace YouTube.Generators
 		YoutubeClient Client { get; }
 		string Id { get; }
 		Video Meta { get; set; }
-		MediaStreamInfoSet UrlsSet { get; set; }
+		StreamManifest UrlsSet { get; set; }
 
 		public ManifestGenerator(IClientService service, string id)
 		{
@@ -34,21 +34,22 @@ namespace YouTube.Generators
 
 		public async Task<IReadOnlyList<DashManifest>> GenerateManifestsAsync()
 		{
-			Meta = await Client.GetVideoAsync(Id);
+			Meta = await Client.Videos.GetAsync(Id);
 
 			if (Meta == null)
 				throw new FileNotFoundException("Video not found. Check video ID and visibility preferences");
 
-			UrlsSet = await Client.GetVideoMediaStreamInfosAsync(Id);
-
-			if (!string.IsNullOrWhiteSpace(UrlsSet.HlsLiveStreamUrl))
+			if (!string.IsNullOrWhiteSpace(await Client.Videos.Streams.GetHttpLiveStreamUrlAsync(Id)))
 				throw new NotSupportedException("This is livestream. Use 'YouTubeClient.VideoPlayback.List()' to get playback URLs");
+
+			UrlsSet = await Client.Videos.Streams.GetManifestAsync(Id);
 
 			List<DashManifest> list = new List<DashManifest>
 			{
 				await GenerateManifest("Auto")
 			};
-			foreach (string i in UrlsSet.GetAllVideoQualityLabels())
+
+			foreach (string i in UrlsSet.GetVideo().Select(k => k.VideoQualityLabel).Distinct())
 				list.Add(await GenerateManifest(i));
 
 			return list.AsReadOnly();

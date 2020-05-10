@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using YoutubeExplode.Videos.Streams;
 
 namespace YouTube.Models
 {
@@ -11,9 +12,9 @@ namespace YouTube.Models
 
 		public class PlaybackUrlsData
 		{
-			public IReadOnlyList<VideoPlaybackUrl> Video { get; set; }
-			public IReadOnlyList<AudioPlaybackUrl> Audio { get; set; }
+			public StreamManifest VideoFilesManifest { get; set; }
 			public string LiveStreamUrl { get; set; }
+			[Obsolete]
 			public DateTime ValidUntil { get; set; }
 		}
 	}

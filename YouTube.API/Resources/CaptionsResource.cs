@@ -29,7 +29,7 @@ namespace YouTube.Resources
 			public async Task<ClosedCaptionTrack> ExecuteAsync()
 			{
 				YoutubeClient client = new YoutubeClient(Service.HttpClient);
-				var response = await client.GetClosedCaptionTrackAsync(CaptionInfo.TrackInfo);
+				var response = await client.Videos.ClosedCaptions.GetAsync(CaptionInfo.TrackInfo);
 				List<ClosedCaptionTrack.ClosedCaption> captions = new List<ClosedCaptionTrack.ClosedCaption>();
 				foreach (var i in response.Captions)
 					captions.Add(new ClosedCaptionTrack.ClosedCaption
