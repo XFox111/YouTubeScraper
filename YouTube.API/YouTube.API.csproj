@@ -5,15 +5,37 @@
     <AssemblyName>YouTube.API</AssemblyName>
     <RootNamespace>YouTube</RootNamespace>
     <Company>Michael "XFox" Gordeev</Company>
-    <Copyright>Copyright ©2019 Michael "XFox" Gordeev</Copyright>
+    <Copyright>Copyright ©2020 Michael "XFox" Gordeev</Copyright>
     <LangVersion>latest</LangVersion>
-    <AssemblyVersion>1.0.2.0</AssemblyVersion>
-    <FileVersion>1.0.2.0</FileVersion>
-    <Version>1.0.2</Version>
+    <AssemblyVersion>1.0.3.0</AssemblyVersion>
+    <FileVersion>1.0.3.0</FileVersion>
+    <Version>1.0.3</Version>
     <PackageId>ExtendedYouTubeAPI</PackageId>
     <Authors>Michael "XFox" Gordeev</Authors>
     <Product>ExtendedYouTubeAPI</Product>
-    <RepositoryUrl>https://github.com/xfox111/YouTubeScraper</RepositoryUrl>
+    <RepositoryUrl>https://github.com/xfox111/YouTubeScraper.git</RepositoryUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Description>Library which is used to extend the abilities of YouTube API v3
+
+Features
+- DASH manifests generation for videos
+- HLS livestreams URLs extraction
+- User's history management (list, add, delete, update)
+- Watch later playlist management (list, add, delete)
+- Video captions retrieval
+- User's recommendations listing
+- User's subscriptions videos listing
+- Videos' URLs retrieval
+- UWP authorization helpers</Description>
+    <PackageProjectUrl>https://github.com/xfox111/YouTubeScraper</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReleaseNotes>- Added UserCredential override with TokenUpdated event
+- Added Success code parser
+- Updated dependencies
+- Migrated to .NET Framework 4.6.1 and .NET Standard 2.1</PackageReleaseNotes>
+    <PackageTags>youtube, google, api, dotnet</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
@@ -45,6 +67,13 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>
